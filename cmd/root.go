@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	baseCfgPath   string
-	targetCfgPath string
+	defaultCfgPath  string
+	overrideCfgPath string
 
 	rootCmd = &cobra.Command{
 		Use:   "environator",
@@ -15,8 +15,8 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&baseCfgPath, "base", "", "path to base yaml file")
-	rootCmd.PersistentFlags().StringVar(&targetCfgPath, "target", "", "path to target yaml file")
+	rootCmd.PersistentFlags().StringVar(&defaultCfgPath, "default", "", "path to default yaml file")
+	rootCmd.PersistentFlags().StringVar(&overrideCfgPath, "override", "", "path to override yaml file")
 }
 
 func Execute() error {

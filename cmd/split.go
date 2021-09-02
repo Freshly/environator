@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	fileLeftOnly   string = "left_only.yaml"
-	fileRightOnly  string = "right_only.yaml"
-	fileOverwrites string = "overwrites.yaml"
+	fileDefaultsOnly   string = "defaults_only.yaml"
+	fileOverwritesOnly string = "overwrites_only.yaml"
+	fileOverwrites     string = "merge_overwrite.yaml"
 )
 
 var (
@@ -27,16 +27,16 @@ var (
 )
 
 func doSplit(cmd *cobra.Command, args []string) error {
-	if baseCfgPath == "" || targetCfgPath == "" {
+	if defaultCfgPath == "" || overrideCfgPath == "" {
 		return errors.New("must provide paths to target and base config files")
 	}
 
-	bb, err := os.ReadFile(baseCfgPath)
+	bb, err := os.ReadFile(defaultCfgPath)
 	if err != nil {
 		return fmt.Errorf("failed to read base config: %v", err)
 	}
 
-	tb, err := os.ReadFile(targetCfgPath)
+	tb, err := os.ReadFile(overrideCfgPath)
 	if err != nil {
 		return fmt.Errorf("failed to read prod config: %v", err)
 	}
@@ -73,7 +73,7 @@ func doSplit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = os.WriteFile(fileRightOnly, tOut, os.ModePerm)
+	err = os.WriteFile(fileOverwritesOnly, tOut, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func doSplit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = os.WriteFile(fileLeftOnly, bOut, os.ModePerm)
+	err = os.WriteFile(fileDefaultsOnly, bOut, os.ModePerm)
 	if err != nil {
 		return err
 	}
