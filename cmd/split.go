@@ -45,19 +45,19 @@ func doSplit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read override file: %v", err)
 	}
 
-	var baseCfg map[string]string
-	err = yaml.Unmarshal(defaultBytes, &baseCfg)
+	var defaultCfg map[string]string
+	err = yaml.Unmarshal(defaultBytes, &defaultCfg)
 	if err != nil {
 		return fmt.Errorf("error unmarshalling defaults; is it a flat YAML file?: %v", err)
 	}
 
-	var targetCfg map[string]string
-	err = yaml.Unmarshal(overrideBytes, &targetCfg)
+	var overrideCfg map[string]string
+	err = yaml.Unmarshal(overrideBytes, &overrideCfg)
 	if err != nil {
 		return fmt.Errorf("error unmarshalling overrides; is it a flat YAML file?: %v", err)
 	}
 
-	defaultsOnly, overridesOnly, overrides, err := split.Do(targetCfg, baseCfg)
+	overridesOnly, defaultsOnly, overrides, err := split.Do(defaultCfg, overrideCfg)
 	if err != nil {
 		return err
 	}
@@ -67,12 +67,12 @@ func doSplit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ovOut, err := yaml.Marshal(overrides)
+	bOut, err := yaml.Marshal(defaultsOnly)
 	if err != nil {
 		return err
 	}
 
-	bOut, err := yaml.Marshal(defaultsOnly)
+	ovOut, err := yaml.Marshal(overrides)
 	if err != nil {
 		return err
 	}
@@ -82,12 +82,12 @@ func doSplit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = os.WriteFile(fileOverrides, ovOut, os.ModePerm)
+	err = os.WriteFile(fileDefaultsOnly, bOut, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(fileDefaultsOnly, bOut, os.ModePerm)
+	err = os.WriteFile(fileOverrides, ovOut, os.ModePerm)
 	if err != nil {
 		return err
 	}

@@ -24,32 +24,38 @@ var secretKeys = []string{
 	"webhook_url",
 }
 
-func Do(left map[string]string, right map[string]string) (map[string]string, map[string]string, map[string]string, error) {
-	leftCfg := hideSecrets(left)
-	rightCfg := hideSecrets(right)
+func Do(dfault map[string]string, override map[string]string) (map[string]string, map[string]string, map[string]string, error) {
+	dfault = hideSecrets(dfault)
+	override = hideSecrets(override)
 
-	rightOnly := map[string]string{}
-	leftOnly := map[string]string{}
-	overwrites := map[string]string{}
+	defaultOnly := map[string]string{}
+	overrideOnly := map[string]string{}
+	overrides := map[string]string{}
 
-	for k, v := range rightCfg {
-		if _, ok := leftCfg[k]; !ok {
-			rightOnly[k] = v
+	for k, v := range override {
+		if _, ok := dfault[k]; !ok {
+			overrideOnly[k] = v
 			continue
 		}
 
-		if leftCfg[k] != rightCfg[k] {
-			overwrites[k] = v
+		// if value appears in both sets, it goes in overrides
+		if _, ok := dfault[k]; ok {
+			if _, ok := override[k]; ok {
+				overrides[k] = v
+			}
 		}
 	}
 
-	for k, v := range leftCfg {
-		if _, ok := rightCfg[k]; !ok {
-			leftOnly[k] = v
+	for k, v := range dfault {
+		if k == "BASIC_AUTH_USERNAME" {
+			fmt.Println(k)
+		}
+		if _, ok := override[k]; !ok {
+			defaultOnly[k] = v
 		}
 	}
 
-	return rightOnly, leftOnly, overwrites, nil
+	return overrideOnly, defaultOnly, overrides, nil
 }
 
 func hideSecrets(out map[string]string) map[string]string {
