@@ -25,26 +25,26 @@ var secretKeys = []string{
 }
 
 func Do(left map[string]string, right map[string]string) (map[string]string, map[string]string, map[string]string, error) {
-	baseCfg := hideSecrets(left)
-	targetCfg := hideSecrets(right)
+	leftCfg := hideSecrets(left)
+	rightCfg := hideSecrets(right)
 
 	rightOnly := map[string]string{}
 	leftOnly := map[string]string{}
 	overwrites := map[string]string{}
 
-	for k, v := range targetCfg {
-		if _, ok := baseCfg[k]; !ok {
+	for k, v := range rightCfg {
+		if _, ok := leftCfg[k]; !ok {
 			rightOnly[k] = v
 			continue
 		}
 
-		if baseCfg[k] != targetCfg[k] {
+		if leftCfg[k] != rightCfg[k] {
 			overwrites[k] = v
 		}
 	}
 
-	for k, v := range baseCfg {
-		if _, ok := targetCfg[k]; !ok {
+	for k, v := range leftCfg {
+		if _, ok := rightCfg[k]; !ok {
 			leftOnly[k] = v
 		}
 	}
