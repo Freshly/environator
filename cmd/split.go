@@ -11,15 +11,15 @@ import (
 )
 
 const (
-	fileDefaultsOnly   string = "defaults_only.yaml"
-	fileOverwritesOnly string = "overwrites_only.yaml"
-	fileOverwrites     string = "merge_overwrite.yaml"
+	fileDefaultsOnly  string = "defaults_only.yaml"
+	fileOverridesOnly string = "overrides_only.yaml"
+	fileOverrides     string = "overrides.yaml"
 )
 
 var (
 	splitCmd = &cobra.Command{
 		Use:           "split",
-		Short:         "split .tf file based on inputs",
+		Short:         "generate two diff and an overwrite YAML file based on a default and override input YAML file",
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE:          doSplit,
@@ -27,38 +27,42 @@ var (
 )
 
 func doSplit(cmd *cobra.Command, args []string) error {
-	if defaultCfgPath == "" || overrideCfgPath == "" {
-		return errors.New("must provide paths to target and base config files")
+	if defaultCfgPath == "" {
+		return errors.New("--default filepath flag not set")
 	}
 
-	bb, err := os.ReadFile(defaultCfgPath)
-	if err != nil {
-		return fmt.Errorf("failed to read base config: %v", err)
+	if overrideCfgPath == "" {
+		return errors.New("--override filepath flag not set")
 	}
 
-	tb, err := os.ReadFile(overrideCfgPath)
+	defaultBytes, err := os.ReadFile(defaultCfgPath)
 	if err != nil {
-		return fmt.Errorf("failed to read prod config: %v", err)
+		return fmt.Errorf("failed to read default file: %v", err)
+	}
+
+	overrideBytes, err := os.ReadFile(overrideCfgPath)
+	if err != nil {
+		return fmt.Errorf("failed to read override file: %v", err)
 	}
 
 	var baseCfg map[string]string
-	err = yaml.Unmarshal(bb, &baseCfg)
+	err = yaml.Unmarshal(defaultBytes, &baseCfg)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling --base config: %v", err)
+		return fmt.Errorf("error unmarshalling defaults; is it a flat YAML file?: %v", err)
 	}
 
 	var targetCfg map[string]string
-	err = yaml.Unmarshal(tb, &targetCfg)
+	err = yaml.Unmarshal(overrideBytes, &targetCfg)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling --target config: %v", err)
+		return fmt.Errorf("error unmarshalling overrides; is it a flat YAML file?: %v", err)
 	}
 
-	fromOnly, toOnly, overrides, err := split.Do(targetCfg, baseCfg)
+	defaultsOnly, overridesOnly, overrides, err := split.Do(targetCfg, baseCfg)
 	if err != nil {
 		return err
 	}
 
-	tOut, err := yaml.Marshal(toOnly)
+	tOut, err := yaml.Marshal(overridesOnly)
 	if err != nil {
 		return err
 	}
@@ -68,17 +72,17 @@ func doSplit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	bOut, err := yaml.Marshal(fromOnly)
+	bOut, err := yaml.Marshal(defaultsOnly)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(fileOverwritesOnly, tOut, os.ModePerm)
+	err = os.WriteFile(fileOverridesOnly, tOut, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(fileOverwrites, ovOut, os.ModePerm)
+	err = os.WriteFile(fileOverrides, ovOut, os.ModePerm)
 	if err != nil {
 		return err
 	}
